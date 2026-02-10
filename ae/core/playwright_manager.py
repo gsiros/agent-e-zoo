@@ -30,7 +30,7 @@ class PlaywrightManager:
 
     The class ensures only one instance of itself, Playwright, and the browser is created during the application lifecycle.
     """
-    _homepage = "https://www.google.com"
+    _homepage = "about:blank"
     _instance = None
     _playwright = None # type: ignore
     _browser_context = None
@@ -134,28 +134,38 @@ class PlaywrightManager:
 
     async def create_browser_context(self):
         user_dir:str = os.environ.get('BROWSER_STORAGE_DIR', '')
+        proxy_url: str = os.environ.get('BROWSER_PROXY', '')
+        proxy_settings = {"server": proxy_url} if proxy_url else None
+        if proxy_settings:
+            logger.info(f"Using browser proxy: {proxy_url}")
+
         if self.browser_type == "chromium":
             logger.info(f"User dir: {user_dir}")
+            chromium_args = [
+                "--disable-blink-features=AutomationControlled",
+                "--disable-session-crashed-bubble",  # disable the restore session bubble
+                "--disable-infobars",  # disable informational popups
+            ]
+            launch_kwargs = dict(
+                channel="chrome",
+                headless=self.isheadless,
+                args=chromium_args,
+                no_viewport=True,
+            )
+            if proxy_settings:
+                launch_kwargs["proxy"] = proxy_settings
+                chromium_args.append("--ignore-certificate-errors")
+
             try:
-                PlaywrightManager._browser_context = await PlaywrightManager._playwright.chromium.launch_persistent_context(user_dir,
-                    channel= "chrome", headless=self.isheadless,
-                    args=["--disable-blink-features=AutomationControlled",
-                        "--disable-session-crashed-bubble",  # disable the restore session bubble
-                        "--disable-infobars",  # disable informational popups,
-                        ],
-                        no_viewport=True
+                PlaywrightManager._browser_context = await PlaywrightManager._playwright.chromium.launch_persistent_context(
+                    user_dir, **launch_kwargs
                 )
             except Exception as e:
                 if "Target page, context or browser has been closed" in str(e):
                     new_user_dir = tempfile.mkdtemp()
                     logger.error(f"Failed to launch persistent context with user dir {user_dir}: {e} Trying to launch with a new user dir {new_user_dir}")
-                    PlaywrightManager._browser_context = await PlaywrightManager._playwright.chromium.launch_persistent_context(new_user_dir,
-                        channel= "chrome", headless=self.isheadless,
-                        args=["--disable-blink-features=AutomationControlled",
-                            "--disable-session-crashed-bubble",  # disable the restore session bubble
-                            "--disable-infobars",  # disable informational popups,
-                            ],
-                            no_viewport=True
+                    PlaywrightManager._browser_context = await PlaywrightManager._playwright.chromium.launch_persistent_context(
+                        new_user_dir, **launch_kwargs
                     )
                 elif "Chromium distribution 'chrome' is not found " in str(e):
                     raise ValueError("Chrome is not installed on this device. Install Google Chrome or install playwright using 'playwright install chrome'. Refer to the readme for more information.") from None
