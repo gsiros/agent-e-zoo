@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import signal
 import uuid
 from queue import Empty
 from queue import Queue
@@ -173,6 +174,8 @@ async def process_command(command: str, playwright_manager: browserManager.Playw
 
     if is_terminating_message(command_exec_result.summary):
         await playwright_manager.notify_user("DONE", MessageType.DONE)
+        logger.info("Task completed successfully — scheduling server shutdown")
+        asyncio.get_event_loop().call_later(2.0, lambda: os.kill(os.getpid(), signal.SIGINT))
     else:
         await playwright_manager.notify_user("Max turns reached", MessageType.MAX_TURNS_REACHED)
 
