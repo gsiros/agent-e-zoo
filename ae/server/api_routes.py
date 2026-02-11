@@ -72,6 +72,9 @@ async def startup_event():
         os.environ["CONTAINER_ID"] = container_id
     await browser_manager.async_initialize()
 
+@app.get("/", description="Health check endpoint to verify that the server is running.")
+async def health_check():
+    return {"status": "ok", "message": "Agent-E Server API is running."}
 
 @app.post("/execute_task", description="Execute a given command related to web navigation and return the result.")
 async def execute_task(request: Request, query_model: CommandQueryModel):
