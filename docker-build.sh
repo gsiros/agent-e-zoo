@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 
-docker build -t agent-e .
+docker build -t muzzle-agent-e .

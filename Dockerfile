@@ -50,4 +50,7 @@ ENV PYTHONUNBUFFERED=1
 # API server port
 EXPOSE 8000
 
-ENTRYPOINT ["./entrypoint.sh"]
+# Command to run the agent
+ENTRYPOINT ["python", "entrypoint.py"]
+# Arguments passed to docker run will be passed to entrypoint.py as command-line arguments
+CMD []

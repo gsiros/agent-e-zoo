@@ -9,5 +9,5 @@ docker run --rm -it \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     --env-file .env \
     --network host \
-    --name agent-e \
-    agent-e
+    --name muzzle-agent-e \
+    muzzle-agent-e
