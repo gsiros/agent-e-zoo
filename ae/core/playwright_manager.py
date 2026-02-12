@@ -150,7 +150,7 @@ class PlaywrightManager:
                 channel="chrome",
                 headless=self.isheadless,
                 args=chromium_args,
-                no_viewport=True,
+                viewport={"width": 1280, "height": 720},
             )
             if proxy_settings:
                 launch_kwargs["proxy"] = proxy_settings
